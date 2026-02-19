@@ -89,22 +89,6 @@ class IH2AzzurraHandController(object):
     def get_motor_currents(self):
         self.serial_interface_object.write(bytes.fromhex('4400' + getHex(255)))
 
-    def execute_sequence(self, sequence_id):
-        print(f'[INFO] [{self.name}] Executing sequence {sequence_id}...')
-        if sequence_id == 0:
-            print(f'[INFO] [{self.name}] Opening all fingers...')
-            # self.open_all()
-            self.serial_interface_object.write(bytes.fromhex('48' + getHex(0) + getHex(0) + getHex(0) + getHex(0) + getHex(0) + '48'))
-        elif sequence_id == 1:
-            print(f'[INFO] [{self.name}] Closing three fingers simultaneously...')
-            for finger_hex_string in ['02', '03', '04']:
-                self.serial_interface_object.write(bytes.fromhex('44' + finger_hex_string + getHex(255)))
-        elif sequence_id == 2:
-            print(f'[INFO] [{self.name}] Going to closing posture {sequence_id}...')
-            self.serial_interface_object.write(bytes.fromhex('48' + getHex(255) + getHex(130) + getHex(130) + getHex(130) + getHex(130) + '48'))
-        else:
-            print(f'[WARN] [{self.name}] Invalid sequence ID! Skipping execution')
-
     def set_pose(self, joint_positions_list=[255, 110, 100, 100, 255]):
         self.serial_interface_object.write(bytes.fromhex('48' + getHex(joint_positions_list[0]) + getHex(joint_positions_list[1]) + \
                                                          getHex(joint_positions_list[2]) + getHex(joint_positions_list[3]) + \

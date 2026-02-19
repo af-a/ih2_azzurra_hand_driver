@@ -29,30 +29,18 @@ class Ih2AzzurraControlNode(Node):
 
         # Get node parameters:
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
-        self.declare_parameter('open_trigger_topic', '~/open_trigger')
-        self.declare_parameter('grasp_trigger_topic', '~/grasp_trigger')
         self.declare_parameter('action_command_topic', '~/action_command')
         self.declare_parameter('joint_states_topic', '~/joint_states')
         self.declare_parameter('pose_config_file_path', '/home/ahmed/workspace/ros2_ws/src/ih2_azzurra_hand_driver/config/default_hand_poses.yaml')
         self.declare_parameter('debug', False)
 
         self.serial_port = self.get_parameter('serial_port').value
-        self.open_trigger_topic = self.get_parameter('open_trigger_topic').value
-        self.grasp_trigger_topic = self.get_parameter('grasp_trigger_topic').value
         self.action_command_topic = self.get_parameter('action_command_topic').value
         self.joint_states_topic = self.get_parameter('joint_states_topic').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
         self.debug = self.get_parameter('debug').value
 
         # Initialize subscribers:
-        self.open_trigger_subscription = self.create_subscription(Bool,
-                                                                  self.open_trigger_topic,
-                                                                  self.open_trigger_callback,
-                                                                  10)
-        self.grasp_trigger_subscription = self.create_subscription(Bool,
-                                                                   self.grasp_trigger_topic,
-                                                                   self.grasp_trigger_callback,
-                                                                   10)
         self.action_command_subscription = self.create_subscription(String,
                                                                    self.action_command_topic,
                                                                    self.action_command_callback,
@@ -77,16 +65,6 @@ class Ih2AzzurraControlNode(Node):
         self.joint_states_msg.position = [float(value) for value in self.hand_controller.get_pose()]
         self.joint_states_publisher.publish(self.joint_states_msg)
 
-    def open_trigger_callback(self, msg):
-        self.get_logger().info('Received open trigger message. Opening gripper...')
-        # TODO: Add wait mechanism
-        self.hand_controller.execute_sequence(0)
-
-    def grasp_trigger_callback(self, msg):
-        self.get_logger().info('Received grasp trigger message. Grasping...')
-        # TODO: Add wait mechanism
-        self.hand_controller.execute_sequence(2)
-
     def action_command_callback(self, msg):
         self.get_logger().info(f'Received action command message: {msg.data}')
         # TODO: Add wait mechanism
@@ -102,6 +80,9 @@ class Ih2AzzurraControlNode(Node):
         elif msg.data == 'tri_grasp_objects':
             self.get_logger().info(f'Executing Tri-grasp for objects...')
             self.hand_controller.set_pose(joint_positions_list=[255, 160, 100, 100, 255])
+        elif msg.data == 'grasp':
+            self.get_logger().info(f'Executing basic grasp')
+            self.hand_controller.set_pose(joint_positions_list=[255, 130, 130, 130, 130])
         # elif msg.data == 'gradual_open_tri_grasp_objects':
         #     self.get_logger().info(f'Executing gradual open for Tri-grasp for objects...')
             # self.hand_controller.execute_objects_tri_grasp_gradual_open()
