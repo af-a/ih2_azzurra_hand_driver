@@ -75,7 +75,7 @@ class IH2AzzurraHandController(object):
         ## FastCalibration:
         self.serial_interface_object.write(bytes.fromhex('46'))
 
-    def open_all(self):
+    def open_hand(self):
         ## Note: for some reason, does not affect joint 00 (thumb):
         self.serial_interface_object.write(bytes.fromhex('48' + getHex(0) + getHex(0) + getHex(0) + getHex(0) + getHex(0) + '48'))
 

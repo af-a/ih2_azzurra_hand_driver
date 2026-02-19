@@ -88,7 +88,7 @@ class Ih2AzzurraControlNode(Node):
             # self.hand_controller.execute_objects_tri_grasp_gradual_open()
         elif msg.data == 'open':
             self.get_logger().info(f'Executing full open...')
-            self.hand_controller.open_all()
+            self.hand_controller.open_hand()
         else:
             self.get_logger().info(f'[WARN] Invalid action command! Ignoring request.')
 
