@@ -90,6 +90,7 @@ class IH2AzzurraHandController(object):
         self.serial_interface_object.write(bytes.fromhex('4400' + getHex(255)))
 
     def set_pose(self, joint_positions_list=[255, 110, 100, 100, 255]):
+        print(f'[INFO] [{self.name}] Going to pose: {joint_positions_list}...')
         self.serial_interface_object.write(bytes.fromhex('48' + getHex(joint_positions_list[0]) + getHex(joint_positions_list[1]) + \
                                                          getHex(joint_positions_list[2]) + getHex(joint_positions_list[3]) + \
                                                          getHex(joint_positions_list[4]) + '48'))
