@@ -5,6 +5,7 @@ Provides an interface for controlling the Prensilia IH2 Azzurra hand.
 """
 
 import time
+import yaml
 
 import rclpy
 
@@ -54,12 +55,16 @@ class Ih2AzzurraControlNode(Node):
 
     def initialize(self):
         self.hand_controller.initialize()
-
+        
+        # Set up joint states publisher:
         publish_rate = 100
         self.joint_states_timer = self.create_timer(1 / publish_rate, self.joint_states_timer_callback)
-
         self.joint_states_msg = JointState()
         self.joint_states_msg.name = list(self.hand_controller.doa_ids_dict.keys())
+
+        # Load default hand poses config:
+        with open(self.pose_config_file_path, 'r') as file_handle:
+            self.hand_poses_dict = yaml.safe_load(file_handle)
 
     def joint_states_timer_callback(self):
         self.joint_states_msg.position = [float(value) for value in self.hand_controller.get_pose()]
@@ -67,30 +72,11 @@ class Ih2AzzurraControlNode(Node):
 
     def action_command_callback(self, msg):
         self.get_logger().info(f'Received action command message: {msg.data}')
-        # TODO: Add wait mechanism
-        if msg.data == 'tri_pre_grasp':
-            self.get_logger().info(f'Executing Tri-pregrasp...')
-            self.hand_controller.set_pose(joint_positions_list=[255, 110, 100, 100, 255])
-        elif msg.data == 'tri_grasp':
-            self.get_logger().info(f'Executing Tri-grasp...')
-            self.hand_controller.set_pose(joint_positions_list=[255, 120, 170, 180, 255])
-        elif msg.data == 'tri_pre_grasp_objects':
-            self.get_logger().info(f'Executing Tri-pregrasp for objects...')
-            self.hand_controller.set_pose(joint_positions_list=[255, 40, 60, 60, 255])
-        elif msg.data == 'tri_grasp_objects':
-            self.get_logger().info(f'Executing Tri-grasp for objects...')
-            self.hand_controller.set_pose(joint_positions_list=[255, 160, 100, 100, 255])
-        elif msg.data == 'grasp':
-            self.get_logger().info(f'Executing basic grasp')
-            self.hand_controller.set_pose(joint_positions_list=[255, 130, 130, 130, 130])
-        # elif msg.data == 'gradual_open_tri_grasp_objects':
-        #     self.get_logger().info(f'Executing gradual open for Tri-grasp for objects...')
-            # self.hand_controller.execute_objects_tri_grasp_gradual_open()
-        elif msg.data == 'open':
-            self.get_logger().info(f'Executing full open...')
-            self.hand_controller.open_hand()
-        else:
-            self.get_logger().info(f'[WARN] Invalid action command! Ignoring request.')
+        self.get_logger().info(f'Attempting to execute pose...')
+        try:
+            self.hand_controller.set_pose(joint_positions_list=self.hand_poses_dict[msg.data])
+        except KeyError:
+            self.get_logger().warn(f'Pose definition not found in pose config file! Ignoring request.')
 
 def main(args=None):
     ## ----------------------------------------------------------------------
@@ -103,9 +89,8 @@ def main(args=None):
     ## Execution:
     ## ----------------------------------------------------------------------
 
-    ih2_azzurra_control_node.get_logger().info(f'Will listen to messages for opening hand ' + \
-                                               f'({ih2_azzurra_control_node.open_trigger_topic}) ' + \
-                                               f'or grasping ({ih2_azzurra_control_node.grasp_trigger_topic})' + \
+    ih2_azzurra_control_node.get_logger().info(f'Will listen to messages for action command ' + \
+                                               f'({ih2_azzurra_control_node.action_command_topic}) ' + \
                                                f'...')
     try:
         rclpy.spin(ih2_azzurra_control_node)
