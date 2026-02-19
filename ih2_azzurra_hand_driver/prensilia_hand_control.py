@@ -70,7 +70,7 @@ class PrensiliaHandController(object):
 
     def open_all(self):
         ## Note: for some reason, does not affect joint 00 (thumb):
-        self.serial_interface_object.write(bytes.fromhex('4C'))
+        self.serial_interface_object.write(bytes.fromhex('48' + getHex(0) + getHex(0) + getHex(0) + getHex(0) + getHex(0) + '48'))
 
     def abduct_thumb(self):
         self.serial_interface_object.write(bytes.fromhex('4400' + getHex(255)))
