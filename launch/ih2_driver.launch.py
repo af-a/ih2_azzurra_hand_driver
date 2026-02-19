@@ -27,6 +27,11 @@ def generate_launch_description():
         default_value='~/action_command',
         description='TODO'
     )
+    joint_states_topic_launch_arg = DeclareLaunchArgument(
+        'joint_states_topic', 
+        default_value='~/joint_states',
+        description='TODO'
+    )
     debug_launch_arg = DeclareLaunchArgument(
         'debug', 
         default_value='False',
@@ -51,6 +56,7 @@ def generate_launch_description():
         open_trigger_topic_launch_arg,
         grasp_trigger_topic_launch_arg,
         action_command_topic_launch_arg,
+        joint_states_topic_launch_arg,
         debug_launch_arg,
         prensilia_control_node, 
     ])

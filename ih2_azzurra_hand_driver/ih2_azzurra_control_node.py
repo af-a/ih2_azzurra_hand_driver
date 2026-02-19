@@ -12,6 +12,7 @@ from rclpy.node import Node
 from launch_ros.substitutions import FindPackageShare
 
 from std_msgs.msg import Bool, String
+from sensor_msgs.msg import JointState
 
 from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController, getHex
 
@@ -31,6 +32,7 @@ class Ih2AzzurraControlNode(Node):
         self.declare_parameter('open_trigger_topic', '~/open_trigger')
         self.declare_parameter('grasp_trigger_topic', '~/grasp_trigger')
         self.declare_parameter('action_command_topic', '~/action_command')
+        self.declare_parameter('joint_states_topic', '~/joint_states')
         self.declare_parameter('pose_config_file_path', '/home/ahmed/workspace/ros2_ws/src/ih2_azzurra_hand_driver/config/default_hand_poses.yaml')
         self.declare_parameter('debug', False)
 
@@ -38,6 +40,7 @@ class Ih2AzzurraControlNode(Node):
         self.open_trigger_topic = self.get_parameter('open_trigger_topic').value
         self.grasp_trigger_topic = self.get_parameter('grasp_trigger_topic').value
         self.action_command_topic = self.get_parameter('action_command_topic').value
+        self.joint_states_topic = self.get_parameter('joint_states_topic').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
         self.debug = self.get_parameter('debug').value
 
@@ -54,16 +57,25 @@ class Ih2AzzurraControlNode(Node):
                                                                    self.action_command_topic,
                                                                    self.action_command_callback,
                                                                    10)
+        # Initialize publishers:
+        self.joint_states_publisher = self.create_publisher(JointState, self.joint_states_topic, 10)
 
-        self.hand_controller = IH2AzzurraHandController(serial_port=self.serial_port)
-        
         # Initialize data variables:
+        self.hand_controller = IH2AzzurraHandController(serial_port=self.serial_port)
         self.initialize()
 
     def initialize(self):
         self.hand_controller.initialize()
 
-        self.last_message_time_stamp = None
+        publish_rate = 100
+        self.joint_states_timer = self.create_timer(1 / publish_rate, self.joint_states_timer_callback)
+
+        self.joint_states_msg = JointState()
+        self.joint_states_msg.name = list(self.hand_controller.doa_ids_dict.keys())
+
+    def joint_states_timer_callback(self):
+        self.joint_states_msg.position = [float(value) for value in self.hand_controller.get_pose()]
+        self.joint_states_publisher.publish(self.joint_states_msg)
 
     def open_trigger_callback(self, msg):
         self.get_logger().info('Received open trigger message. Opening gripper...')
