@@ -12,16 +12,6 @@ def generate_launch_description():
         default_value='/dev/ttyUSB0',
         description='TODO'
     )
-    open_trigger_topic_launch_arg = DeclareLaunchArgument(
-        'open_trigger_topic', 
-        default_value='~/open_trigger',
-        description='TODO'
-    )
-    grasp_trigger_topic_launch_arg = DeclareLaunchArgument(
-        'grasp_trigger_topic', 
-        default_value='~/grasp_trigger',
-        description='TODO'
-    )
     action_command_topic_launch_arg = DeclareLaunchArgument(
         'action_command_topic', 
         default_value='~/action_command',
@@ -44,8 +34,6 @@ def generate_launch_description():
         name='new_driver_node',
         parameters=[
             {'serial_port': LaunchConfiguration('serial_port')},
-            {'open_trigger_topic': LaunchConfiguration('open_trigger_topic')},
-            {'grasp_trigger_topic': LaunchConfiguration('grasp_trigger_topic')},
             {'action_command_topic': LaunchConfiguration('action_command_topic')},
             {'debug': LaunchConfiguration('debug')},
         ],
@@ -53,8 +41,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         serial_port_launch_arg,
-        open_trigger_topic_launch_arg,
-        grasp_trigger_topic_launch_arg,
         action_command_topic_launch_arg,
         joint_states_topic_launch_arg,
         debug_launch_arg,
