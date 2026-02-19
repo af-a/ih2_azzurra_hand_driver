@@ -56,6 +56,13 @@ class IH2AzzurraHandController(object):
 
         self.serial_interface_object = None
 
+
+        self.doa_ids_dict = {'thumb_abduction': '00', 
+                             'thumb_flexion': '01',
+                             'index_flexion': '02', 
+                             'middle_flexion': '03', 
+                             'ring_little_flexion': '04'}
+
     def initialize(self):
         self.serial_interface_object = serial.Serial()
         self.serial_interface_object.baudrate = 115200
@@ -102,3 +109,11 @@ class IH2AzzurraHandController(object):
         self.serial_interface_object.write(bytes.fromhex('48' + getHex(joint_positions_list[0]) + getHex(joint_positions_list[1]) + \
                                                          getHex(joint_positions_list[2]) + getHex(joint_positions_list[3]) + \
                                                          getHex(joint_positions_list[4]) + '48'))
+
+    def get_pose(self):
+        joint_positions_list = []
+        for doa, id_str in self.doa_ids_dict.items():
+            self.serial_interface_object.write(bytes.fromhex('45' + id_str))
+            joint_positions_list.append(int.from_bytes(self.serial_interface_object.read(), byteorder='big'))
+
+        return joint_positions_list
