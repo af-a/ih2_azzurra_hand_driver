@@ -22,6 +22,7 @@ setup(
         "std-msgs",
         "sensor-msgs",
         "pyserial",
+        "PyYAML",
     ],
     setup_requires=["wheel"],
     data_files=[
