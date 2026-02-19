@@ -80,16 +80,16 @@ class Ih2AzzurraControlNode(Node):
         # TODO: Add wait mechanism
         if msg.data == 'tri_pre_grasp':
             self.get_logger().info(f'Executing Tri-pregrasp...')
-            self.hand_controller.go_to_pose(joint_positions_list=[255, 110, 100, 100, 255])
+            self.hand_controller.set_pose(joint_positions_list=[255, 110, 100, 100, 255])
         elif msg.data == 'tri_grasp':
             self.get_logger().info(f'Executing Tri-grasp...')
-            self.hand_controller.go_to_pose(joint_positions_list=[255, 120, 170, 180, 255])
+            self.hand_controller.set_pose(joint_positions_list=[255, 120, 170, 180, 255])
         elif msg.data == 'tri_pre_grasp_objects':
             self.get_logger().info(f'Executing Tri-pregrasp for objects...')
-            self.hand_controller.go_to_pose(joint_positions_list=[255, 40, 60, 60, 255])
+            self.hand_controller.set_pose(joint_positions_list=[255, 40, 60, 60, 255])
         elif msg.data == 'tri_grasp_objects':
             self.get_logger().info(f'Executing Tri-grasp for objects...')
-            self.hand_controller.go_to_pose(joint_positions_list=[255, 160, 100, 100, 255])
+            self.hand_controller.set_pose(joint_positions_list=[255, 160, 100, 100, 255])
         # elif msg.data == 'gradual_open_tri_grasp_objects':
         #     self.get_logger().info(f'Executing gradual open for Tri-grasp for objects...')
             # self.hand_controller.execute_objects_tri_grasp_gradual_open()

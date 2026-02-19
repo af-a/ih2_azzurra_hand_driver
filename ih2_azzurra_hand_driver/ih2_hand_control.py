@@ -98,7 +98,7 @@ class IH2AzzurraHandController(object):
         else:
             print(f'[WARN] [{self.name}] Invalid sequence ID! Skipping execution')
 
-    def go_to_pose(self, joint_positions_list=[255, 110, 100, 100, 255]):
+    def set_pose(self, joint_positions_list=[255, 110, 100, 100, 255]):
         self.serial_interface_object.write(bytes.fromhex('48' + getHex(joint_positions_list[0]) + getHex(joint_positions_list[1]) + \
                                                          getHex(joint_positions_list[2]) + getHex(joint_positions_list[3]) + \
                                                          getHex(joint_positions_list[4]) + '48'))
