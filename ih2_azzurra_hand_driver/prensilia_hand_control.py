@@ -98,24 +98,7 @@ class PrensiliaHandController(object):
         else:
             print(f'[WARN] [{self.name}] Invalid sequence ID! Skipping execution')
 
-    def execute_tri_pre_grasp(self):
-        self.serial_interface_object.write(bytes.fromhex('48' + getHex(255) + getHex(110) + getHex(100) + getHex(100) + getHex(255) + '48'))
-
-    def execute_tri_grasp(self):
-        self.serial_interface_object.write(bytes.fromhex('48' + getHex(255) + getHex(120) + getHex(170) + getHex(180) + getHex(255) + '48'))
-
-    def execute_objects_tri_grasp(self):
-        self.serial_interface_object.write(bytes.fromhex('48' + getHex(255) + getHex(160) + getHex(110) + getHex(110) + getHex(255) + '48'))
-
-    def execute_objects_tri_pre_grasp(self):
-        self.serial_interface_object.write(bytes.fromhex('48' + getHex(255) + getHex(40) + getHex(60) + getHex(60) + getHex(255) + '48'))
-
-    def execute_objects_tri_grasp_gradual_open(self):
-        ## NOTE: Assumes starting at end position of execute_objects_tri_grasp!
-        num_steps = 10
-        current_thumb_value, current_finger_value = 160, 110
-        for step in range(num_steps):
-            time.sleep(0.1)
-            self.serial_interface_object.write(bytes.fromhex('48' + getHex(255) + getHex(current_thumb_value) + getHex(current_finger_value) + getHex(current_finger_value) + getHex(255) + '48'))
-            current_thumb_value -= 12
-            current_finger_value -= 5
+    def go_to_pose(self, joint_positions_list=[255, 110, 100, 100, 255]):
+        self.serial_interface_object.write(bytes.fromhex('48' + getHex(joint_positions_list[0]) + getHex(joint_positions_list[1]) + \
+                                                         getHex(joint_positions_list[2]) + getHex(joint_positions_list[3]) + \
+                                                         getHex(joint_positions_list[4]) + '48'))
