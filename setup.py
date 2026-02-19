@@ -20,6 +20,7 @@ setup(
     install_requires=[
         "rclpy",
         "std-msgs",
+        "sensor-msgs",
         "pyserial",
     ],
     setup_requires=["wheel"],
