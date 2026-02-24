@@ -22,11 +22,6 @@ def generate_launch_description():
         default_value='~/joint_states',
         description='TODO'
     )
-    debug_launch_arg = DeclareLaunchArgument(
-        'debug', 
-        default_value='False',
-        description='TODO'
-    )
 
     prensilia_control_node_name = 'new_driver_node'
     prensilia_control_node = Node(
@@ -36,7 +31,6 @@ def generate_launch_description():
         parameters=[
             {'serial_port': LaunchConfiguration('serial_port')},
             {'action_command_topic': LaunchConfiguration('action_command_topic')},
-            {'debug': LaunchConfiguration('debug')},
         ],
     )
 
@@ -51,7 +45,6 @@ def generate_launch_description():
         serial_port_launch_arg,
         action_command_topic_launch_arg,
         joint_states_topic_launch_arg,
-        debug_launch_arg,
         prensilia_control_node, 
         rqt_reconfigure_node,
     ])
