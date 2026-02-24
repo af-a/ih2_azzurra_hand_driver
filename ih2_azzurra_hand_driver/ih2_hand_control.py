@@ -67,7 +67,15 @@ class IH2AzzurraHandController(object):
         self.serial_interface_object = serial.Serial()
         self.serial_interface_object.baudrate = 115200
         self.serial_interface_object.port = self.serial_port
-        self.serial_interface_object.open()
+        try:
+            self.serial_interface_object.open()
+        except serial.serialutil.SerialException as e:
+            print(f'[INFO] [{self.name}] Caught exception: {e}')
+            print(f'[INFO] [{self.name}] Check that the device in accessible' + \
+                  f' on port {self.serial_port}!')
+            return False
+
+        return True
 
     def reset_hand(self):
         ## FirstCalibration:

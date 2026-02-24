@@ -54,8 +54,12 @@ class Ih2AzzurraControlNode(Node):
         self.initialize()
 
     def initialize(self):
-        self.hand_controller.initialize()
-        
+        if not self.hand_controller.initialize():
+            self.get_logger().error(f'Could not initialize hand controller!')
+            self.get_logger().error(f'Check that the serial_port is correct.')
+            self.get_logger().error(f'Shutting down...')
+            raise SystemExit
+            
         # Set up joint states publisher:
         publish_rate = 100
         self.joint_states_timer = self.create_timer(1 / publish_rate, self.joint_states_timer_callback)
