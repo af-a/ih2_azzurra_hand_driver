@@ -56,7 +56,7 @@ class Ih2AzzurraControlNode(Node):
     def initialize(self):
         if not self.hand_controller.initialize():
             self.get_logger().error(f'Could not initialize hand controller!')
-            self.get_logger().error(f'Check that the serial_port is correct.')
+            self.get_logger().error(f'Check that the device is accessible on serial_port {self.serial_port}.')
             self.get_logger().error(f'Shutting down...')
             raise SystemExit
             
