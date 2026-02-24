@@ -11,6 +11,7 @@ import rclpy
 
 from rclpy.node import Node
 from launch_ros.substitutions import FindPackageShare
+from rcl_interfaces.msg import ParameterDescriptor, IntegerRange, SetParametersResult
 
 from std_msgs.msg import Bool, String
 from sensor_msgs.msg import JointState
@@ -70,7 +71,31 @@ class Ih2AzzurraControlNode(Node):
         with open(self.pose_config_file_path, 'r') as file_handle:
             self.hand_poses_dict = yaml.safe_load(file_handle)
 
+        # Initialize individual DoA control params:
+        self.doa_names = list(self.hand_controller.doa_ids_dict.keys())
+        initial_joint_positions = [int(value) for value in self.hand_controller.get_pose()]
+        for doa_id, doa_name in enumerate(self.doa_names):
+            self.declare_parameter(doa_name, 
+                                   value=initial_joint_positions[doa_id],
+                                   descriptor=ParameterDescriptor(name=doa_name,
+                                                                  type=rclpy.Parameter.Type.INTEGER.value,
+                                                                  integer_range=[IntegerRange(from_value=0, to_value=255, step=1)],
+                                                                 ),
+                                  )
+        self.add_on_set_parameters_callback(self.parameters_callback)
+
+    def parameters_callback(self, params):
+        current_joint_states = [int(value) for value in self.hand_controller.get_pose()]
+        for param in params:
+            if param.name in self.doa_names:
+                current_joint_states[self.doa_names.index(param.name)] = int(param.value)
+
+        self.hand_controller.set_pose(joint_positions_list=current_joint_states)
+
+        return SetParametersResult(successful=True)
+
     def joint_states_timer_callback(self):
+        ## TODO: Create custom msg to allow ints or switch to saving deg values
         self.joint_states_msg.position = [float(value) for value in self.hand_controller.get_pose()]
         self.joint_states_publisher.publish(self.joint_states_msg)
 
