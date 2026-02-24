@@ -28,15 +28,23 @@ def generate_launch_description():
         description='TODO'
     )
 
+    prensilia_control_node_name = 'new_driver_node'
     prensilia_control_node = Node(
         package='ih2_azzurra_hand_driver',
         executable='new_driver_node',
-        name='new_driver_node',
+        name=prensilia_control_node_name,
         parameters=[
             {'serial_port': LaunchConfiguration('serial_port')},
             {'action_command_topic': LaunchConfiguration('action_command_topic')},
             {'debug': LaunchConfiguration('debug')},
         ],
+    )
+
+    rqt_reconfigure_node = Node(
+        package='rqt_reconfigure',
+        executable='rqt_reconfigure',
+        name='ih2_rqt_reconfigure',
+        arguments=[f'/{prensilia_control_node_name}']
     )
 
     return LaunchDescription([
@@ -45,4 +53,5 @@ def generate_launch_description():
         joint_states_topic_launch_arg,
         debug_launch_arg,
         prensilia_control_node, 
+        rqt_reconfigure_node,
     ])
