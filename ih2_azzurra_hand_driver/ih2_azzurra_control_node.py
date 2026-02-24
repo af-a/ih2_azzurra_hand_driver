@@ -104,6 +104,16 @@ class Ih2AzzurraControlNode(Node):
         self.get_logger().info(f'Attempting to execute pose...')
         try:
             self.hand_controller.set_pose(joint_positions_list=self.hand_poses_dict[msg.data])
+
+            # Update params:
+            self.get_logger().info(f'Waiting until action is executed...')
+            ## TODO: Implement smarter waiting mechanism:
+            time.sleep(3)
+            self.get_logger().info(f'Updating ROS parameters...')
+            joint_positions = [int(value) for value in self.hand_controller.get_pose()]
+            updated_param_values = [rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions[doa_id]) \
+                                        for doa_id, doa_name in enumerate(self.doa_names)]
+            self.set_parameters(updated_param_values)
         except KeyError:
             self.get_logger().warn(f'Pose definition not found in pose config file! Ignoring request.')
 
