@@ -32,6 +32,7 @@ class Ih2AzzurraControlNode(Node):
         # Get node parameters:
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
         self.declare_parameter('pose_config_file_path', '/home/ahmed/workspace/ros2_ws/src/ih2_azzurra_hand_driver/config/default_hand_poses.yaml')
+        self.declare_parameter('action_command_string', 'Type grasp name here...')
 
         self.serial_port = self.get_parameter('serial_port').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
@@ -80,15 +81,28 @@ class Ih2AzzurraControlNode(Node):
                                   )
         self.add_on_set_parameters_callback(self.parameters_callback)
 
+        self.executing_pose_motion = False
+
     def parameters_callback(self, params):
-        current_joint_states = [int(value) for value in self.hand_controller.get_pose()]
-        for param in params:
-            if param.name in self.doa_names:
-                current_joint_states[self.doa_names.index(param.name)] = int(param.value)
+        modified_param_names = [param.name for param in params]
+        modified_joint_param_names = list(set(modified_param_names).intersection(set(self.doa_names)))
+        # self.get_logger().info(f'[DEBUG] modified_joint_param_names: {modified_joint_param_names}')
 
-        self.hand_controller.set_pose(joint_positions_list=current_joint_states)
+        if 'action_command_string' in modified_param_names:
+            action_command_param = next(param for param in params if param.name == 'action_command_string')
+            self.execute_hand_pose(action_command_param.value)
+            return SetParametersResult(successful=True)
+        elif modified_joint_param_names != []:
+            desired_joint_states = [int(value) for value in self.hand_controller.get_pose()]
+            for param in params:
+                # self.get_logger().info(f'[DEBUG] Param modified: {param.name} --> {param.value}')
+                if param.name in self.doa_names:
+                    desired_joint_states[self.doa_names.index(param.name)] = int(param.value)
 
-        return SetParametersResult(successful=True)
+            if not self.executing_pose_motion:
+                self.hand_controller.set_pose(joint_positions_list=desired_joint_states)
+
+            return SetParametersResult(successful=True)
 
     def joint_states_timer_callback(self):
         ## TODO: Create custom msg to allow ints or switch to saving deg values
@@ -97,19 +111,21 @@ class Ih2AzzurraControlNode(Node):
 
     def action_command_callback(self, msg):
         self.get_logger().info(f'Received action command message: {msg.data}')
+        self.execute_hand_pose(msg.data)
+
+    def execute_hand_pose(self, hand_pose_str):
         self.get_logger().info(f'Attempting to execute pose...')
         try:
-            self.hand_controller.set_pose(joint_positions_list=self.hand_poses_dict[msg.data])
+            self.get_logger().info(f'Executing pose {hand_pose_str}...')
+            joint_positions_list = self.hand_poses_dict[hand_pose_str]
+            self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
+            self.executing_pose_motion = True
 
             # Update params:
-            self.get_logger().info(f'Waiting until action is executed...')
-            ## TODO: Implement smarter waiting mechanism:
-            time.sleep(3)
             self.get_logger().info(f'Updating ROS parameters...')
-            joint_positions = [int(value) for value in self.hand_controller.get_pose()]
-            updated_param_values = [rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions[doa_id]) \
-                                        for doa_id, doa_name in enumerate(self.doa_names)]
-            self.set_parameters(updated_param_values)
+            self.set_parameters([rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions_list[doa_id]) \
+                                        for doa_id, doa_name in enumerate(self.doa_names)])
+            self.executing_pose_motion = False
         except KeyError:
             self.get_logger().warn(f'Pose definition not found in pose config file! Ignoring request.')
 
