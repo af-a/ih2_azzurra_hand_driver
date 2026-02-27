@@ -12,16 +12,6 @@ def generate_launch_description():
         default_value='/dev/ttyUSB0',
         description='TODO'
     )
-    action_command_topic_launch_arg = DeclareLaunchArgument(
-        'action_command_topic', 
-        default_value='~/action_command',
-        description='TODO'
-    )
-    joint_states_topic_launch_arg = DeclareLaunchArgument(
-        'joint_states_topic', 
-        default_value='~/joint_states',
-        description='TODO'
-    )
 
     prensilia_control_node_name = 'new_driver_node'
     prensilia_control_node = Node(
@@ -30,7 +20,6 @@ def generate_launch_description():
         name=prensilia_control_node_name,
         parameters=[
             {'serial_port': LaunchConfiguration('serial_port')},
-            {'action_command_topic': LaunchConfiguration('action_command_topic')},
         ],
         on_exit=Shutdown(),
     )
@@ -44,8 +33,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         serial_port_launch_arg,
-        action_command_topic_launch_arg,
-        joint_states_topic_launch_arg,
         prensilia_control_node, 
         rqt_reconfigure_node,
     ])

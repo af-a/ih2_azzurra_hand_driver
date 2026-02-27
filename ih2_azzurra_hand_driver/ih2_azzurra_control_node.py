@@ -31,14 +31,12 @@ class Ih2AzzurraControlNode(Node):
 
         # Get node parameters:
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
-        self.declare_parameter('action_command_topic', '~/action_command')
-        self.declare_parameter('joint_states_topic', '~/joint_states')
         self.declare_parameter('pose_config_file_path', '/home/ahmed/workspace/ros2_ws/src/ih2_azzurra_hand_driver/config/default_hand_poses.yaml')
 
         self.serial_port = self.get_parameter('serial_port').value
-        self.action_command_topic = self.get_parameter('action_command_topic').value
-        self.joint_states_topic = self.get_parameter('joint_states_topic').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
+        self.action_command_topic = '~/action_command'
+        self.joint_states_topic = '~/joint_states'
 
         # Initialize subscribers:
         self.action_command_subscription = self.create_subscription(String,
