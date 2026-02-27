@@ -56,7 +56,6 @@ class IH2AzzurraHandController(object):
 
         self.serial_interface_object = None
 
-
         self.doa_ids_dict = {'thumb_abduction': '00', 
                              'thumb_flexion': '01',
                              'index_flexion': '02', 
@@ -93,10 +92,6 @@ class IH2AzzurraHandController(object):
     def adduct_thumb(self):
         self.serial_interface_object.write(bytes.fromhex('4400' + getHex(0)))
 
-    ## Unused:
-    def get_motor_currents(self):
-        self.serial_interface_object.write(bytes.fromhex('4400' + getHex(255)))
-
     def set_pose(self, joint_positions_list=[255, 110, 100, 100, 255]):
         print(f'[INFO] [{self.name}] Going to pose: {joint_positions_list}...')
         self.serial_interface_object.write(bytes.fromhex('48' + getHex(joint_positions_list[0]) + getHex(joint_positions_list[1]) + \
@@ -110,3 +105,12 @@ class IH2AzzurraHandController(object):
             joint_positions_list.append(int.from_bytes(self.serial_interface_object.read(), byteorder='big'))
 
         return joint_positions_list
+
+    def get_motor_currents(self):
+        motor_currents_list = []
+        for doa, id_str in self.doa_ids_dict.items():
+            self.serial_interface_object.write(bytes.fromhex('49' + id_str))
+            motor_currents_list.append(int.from_bytes(self.serial_interface_object.read(), byteorder='big'))
+
+        return motor_currents_list
+
