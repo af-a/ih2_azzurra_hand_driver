@@ -12,6 +12,11 @@ def generate_launch_description():
         default_value='/dev/ttyUSB0',
         description='TODO'
     )
+    pose_config_file_path_launch_arg = DeclareLaunchArgument(
+        'pose_config_file_path', 
+        default_value='/home/ahmed/workspace/ros2_ws/src/ih2_azzurra_hand_driver/config/default_hand_poses.yaml',
+        description='TODO'
+    )
 
     prensilia_control_node_name = 'new_driver_node'
     prensilia_control_node = Node(
@@ -20,6 +25,7 @@ def generate_launch_description():
         name=prensilia_control_node_name,
         parameters=[
             {'serial_port': LaunchConfiguration('serial_port')},
+            {'pose_config_file_path': LaunchConfiguration('pose_config_file_path')},
         ],
         on_exit=Shutdown(),
     )
@@ -33,6 +39,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         serial_port_launch_arg,
+        pose_config_file_path_launch_arg,
         prensilia_control_node, 
         rqt_reconfigure_node,
     ])
