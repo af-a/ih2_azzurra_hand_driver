@@ -110,3 +110,10 @@ class IH2AzzurraHandController(object):
 
         return motor_currents_list
 
+    def get_finger_status(self):
+        # Note: the final bit in each string indicates whether that joint is in motion (1) or stationary (0)
+        finger_status_string_list = []
+        for doa, id_str in self.doa_ids_dict.items():
+            self.serial_interface_object.write(bytes.fromhex('4B' + id_str))
+            finger_status_string_list.append(bin(int.from_bytes(self.serial_interface_object.read(), byteorder='big')))
+        return finger_status_string_list
