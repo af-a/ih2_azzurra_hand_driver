@@ -18,10 +18,10 @@ def generate_launch_description():
         description='TODO'
     )
 
-    prensilia_control_node_name = 'new_driver_node'
+    prensilia_control_node_name = 'driver_node'
     prensilia_control_node = Node(
         package='ih2_azzurra_hand_driver',
-        executable='new_driver_node',
+        executable='driver_node',
         name=prensilia_control_node_name,
         parameters=[
             {'serial_port': LaunchConfiguration('serial_port')},

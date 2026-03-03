@@ -44,7 +44,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'driver_node = ih2_azzurra_hand_driver.prensilia_control_node:main'
+            'driver_node = ih2_azzurra_hand_driver.ih2_azzurra_control_node:main'
         ],
     },
 )
