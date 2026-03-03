@@ -49,7 +49,7 @@ class IH2AzzurraHandController(object):
     hand.
     """
 
-    def __init__(self, serial_port='/dev/ttyUSB0', debug=False):
+    def __init__(self, serial_port='/dev/ttyUSB0', verbose=False):
         self.name = self.__class__.__name__
 
         self.serial_port = serial_port
@@ -61,6 +61,8 @@ class IH2AzzurraHandController(object):
                              'index_flexion': '02', 
                              'middle_flexion': '03', 
                              'ring_little_flexion': '04'}
+
+        self.verbose = verbose
 
     def initialize(self):
         self.serial_interface_object = serial.Serial()
@@ -89,7 +91,8 @@ class IH2AzzurraHandController(object):
         self.serial_interface_object.write(bytes.fromhex('4400' + getHex(0)))
 
     def set_pose(self, joint_positions_list=[255, 110, 100, 100, 255]):
-        print(f'[INFO] [{self.name}] Going to pose: {joint_positions_list}...')
+        if self.verbose:
+            print(f'[INFO] [{self.name}] Going to pose: {joint_positions_list}...')
         self.serial_interface_object.write(bytes.fromhex('48' + getHex(joint_positions_list[0]) + getHex(joint_positions_list[1]) + \
                                                          getHex(joint_positions_list[2]) + getHex(joint_positions_list[3]) + \
                                                          getHex(joint_positions_list[4]) + '48'))
