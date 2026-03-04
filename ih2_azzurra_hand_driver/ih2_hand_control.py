@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Controls PrensiliaIH2 Azzurra Hand.
+Controls Prensilia IH2 Azzurra Hand.
 """
 
 import os
@@ -19,8 +19,6 @@ import serial
 def getHex(dataint):
     """
     Converts integer to hex value.
-
-    Based on code from ControlPrensilia_linux.py script.
 
     Note from original documentation:
     "Prensillia using 8 bit (0~255) to send and position the finger"
