@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import os
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, Shutdown
 from launch.substitutions import LaunchConfiguration
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
 
@@ -14,7 +17,7 @@ def generate_launch_description():
     )
     pose_config_file_path_launch_arg = DeclareLaunchArgument(
         'pose_config_file_path', 
-        default_value='/home/ahmed/workspace/ros2_ws/src/ih2_azzurra_hand_driver/config/default_hand_poses.yaml',
+        default_value=os.path.join(FindPackageShare(package='ih2_azzurra_hand_driver').find('ih2_azzurra_hand_driver'), 'default_hand_poses.yaml'),
         description='TODO'
     )
 
