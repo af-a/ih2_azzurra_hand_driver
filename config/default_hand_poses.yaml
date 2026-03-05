@@ -1,0 +1,14 @@
+tri_digit_pre_grasp:
+    [255, 110, 100, 100, 255]
+tri_digit_grasp:
+    [255, 120, 170, 180, 255]
+spherical_grasp:
+    [255, 130, 130, 130, 130]
+cylindrical_grasp:
+    [200, 10, 130, 130, 130]
+lateral_pinch_grasp:
+    [230, 100, 160, 255, 255]
+open:
+    [0, 0, 0, 0, 0]
+ok:
+    [205, 110, 150, 70, 70]

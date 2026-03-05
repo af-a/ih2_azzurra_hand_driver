@@ -20,11 +20,14 @@ setup(
     install_requires=[
         "rclpy",
         "std-msgs",
+        "sensor-msgs",
         "pyserial",
+        "PyYAML",
     ],
     setup_requires=["wheel"],
     data_files=[
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name, ['config/default_hand_poses.yaml']),
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         (os.path.join('share', package_name, 'launch'), glob.glob(os.path.join('launch', '*launch.[pxy][yma]*')))
@@ -42,7 +45,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'driver_node = ih2_azzurra_hand_driver.prensilia_control_node:main'
+            'driver_node = ih2_azzurra_hand_driver.ih2_azzurra_control_node:main'
         ],
     },
 )
