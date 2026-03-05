@@ -32,7 +32,7 @@ class Ih2AzzurraControlNode(Node):
 
         # Get node parameters:
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
-        self.declare_parameter('pose_config_file_path', os.path.join(self.pkg_share_path, 'config/default_hand_poses.yaml'))
+        self.declare_parameter('pose_config_file_path', os.path.join(self.pkg_share_path, 'default_hand_poses.yaml'))
         self.declare_parameter('action_command_string', 'Type grasp name here...')
 
         self.serial_port = self.get_parameter('serial_port').value
