@@ -116,6 +116,9 @@ class Ih2AzzurraControlNode(Node):
         self.hand_state_msg.motor_position = [value for value in self.hand_controller.get_pose()]
         self.hand_state_publisher.publish(self.hand_state_msg)
 
+        finger_status = self.hand_controller.get_finger_status()
+        self.hand_state_msg.moving = [bool(int(status_bits[-1])) for status_bits in finger_status]
+
     def action_command_callback(self, msg):
         self.get_logger().info(f'Received action command message: {msg.data}')
         self.execute_hand_pose(msg.data)
