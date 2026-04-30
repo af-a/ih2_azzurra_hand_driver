@@ -39,22 +39,22 @@ colcon build --packages-select ih2_azzurra_hand_driver
 
 ## Usage
 
-TODO
-
-To execute a tri-grasp with the Prensilia hand:
+To launch the driver node, run:
 ```bash
-ros2 topic pub --once /prensilia_control_node/action_command std_msgs/msg/String "{'data': 'tri_grasp'}"
+ros2 launch ih2_azzurra_hand_driver ih2_driver.launch.py
 ```
 
-To open the Prensilia hand:
+To execute a named hand pose from the set defined in [config/default_hand_poses.yaml](config/default_hand_poses.yaml), publish to the `/driver_node/action_command` as follows:
 ```bash
-ros2 topic pub --once /prensilia_control_node/action_command std_msgs/msg/String "{'data': 'open'}"
+ros2 topic pub --once /driver_node/action_command std_msgs/msg/String '{"data": "open"}'
 ```
 
-To execute a more gradual opening of the Prensilia hand from a tri-grasp position (for more delicate object release):
-```bash
-ros2 topic pub --once /prensilia_control_node/action_command std_msgs/msg/String "{'data': gradual_open_tri_grasp_objects}"
-```
+The launch file also starts an `rqt_reconfigure` GUI:
+<p float="left" align="center">
+  <img src="docs/images/reconfigure_gui_screenshot.png" width="90%" />
+</p>
+
+A desired named pose can be executed by entering its name in the `action_command_string` field. In addition, the position if each of the five degrees of actuation (DoAs) can be individually controlled by modifying its value using the sliders or adjacent fields on the GUI.
 
 
 ## Directory Structure
@@ -67,11 +67,11 @@ ih2_azzurra_hand_driver
 │
 ├── ih2_azzurra_hand_driver
 │   ├── __init__.py
-│   ├── prensilia_control_node.py
-│   └── prensilia_hand_control.py
+│   ├── ih2_azzurra_control_node.py
+│   └── ih2_hand_control.py
 │
 ├── launch
-│   └── prensilia_control.launch.py
+│   └── ih2_driver.launch.py
 │
 ├── config
 ├── LICENSE
