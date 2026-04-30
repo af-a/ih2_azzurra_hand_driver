@@ -114,10 +114,7 @@ class Ih2AzzurraControlNode(Node):
     def hand_state_timer_callback(self):
         self.hand_state_msg.header.stamp = self.get_clock().now().to_msg()
         self.hand_state_msg.motor_position = self.hand_controller.get_pose()
-
-        finger_status = self.hand_controller.get_finger_status()
-        self.hand_state_msg.motor_moving = [bool(int(status_bits[-1])) for status_bits in finger_status]
-
+        self.hand_state_msg.motor_moving = [bool(int(status_bits[-1])) for status_bits in self.hand_controller.get_finger_status()]
         self.hand_state_msg.motor_current = self.hand_controller.get_motor_currents()
 
         self.hand_state_publisher.publish(self.hand_state_msg)
