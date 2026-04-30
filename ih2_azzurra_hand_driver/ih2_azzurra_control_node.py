@@ -113,7 +113,7 @@ class Ih2AzzurraControlNode(Node):
 
     def hand_state_timer_callback(self):
         self.hand_state_msg.header.stamp = self.get_clock().now().to_msg()
-        self.hand_state_msg.motor_position = [value for value in self.hand_controller.get_pose()]
+        self.hand_state_msg.motor_position = self.hand_controller.get_pose()
 
         finger_status = self.hand_controller.get_finger_status()
         self.hand_state_msg.motor_moving = [bool(int(status_bits[-1])) for status_bits in finger_status]
@@ -132,7 +132,7 @@ class Ih2AzzurraControlNode(Node):
             joint_positions_list = self.hand_poses_dict[hand_pose_str]
             self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
             self.executing_pose_motion = True
-            self.get_logger().info(f'{GREEN}Executing pose {hand_pose_str}...{RESET}')
+            self.get_logger().info(f'{GREEN}Executing pose "{hand_pose_str}"...{RESET}')
 
             # Update params:
             self.get_logger().info(f'Updating ROS parameters...')
