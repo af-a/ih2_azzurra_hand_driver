@@ -20,7 +20,6 @@ setup(
     install_requires=[
         "rclpy",
         "std-msgs",
-        "sensor-msgs",
         "pyserial",
         "PyYAML",
     ],
