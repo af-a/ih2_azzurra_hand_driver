@@ -93,6 +93,7 @@ ROS:
 * `rclpy`
 * `ament_cmake_python`
 * `std_msgs`
+* `ih2_azzurra_hand_driver_interfaces`
 
 ## Future Plans
 
