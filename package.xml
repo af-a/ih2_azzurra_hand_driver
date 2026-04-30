@@ -5,15 +5,15 @@
   <version>0.1.0</version>
   <description>Exposes interfaces to the Prensilia IH2 Azzurra Hand</description>
 
-  <author email="ahmed.abdelrahman@tum.de">Ahmed Abdelrahman</author>
-  <maintainer email="ahmed.abdelrahman@tum.de">Ahmed Abdelrahman</maintainer>
+  <author email="ahmed.abdelrahman@outlook.de">Ahmed Abdelrahman</author>
+  <maintainer email="ahmed.abdelrahman@outlook.de">Ahmed Abdelrahman</maintainer>
   <url>https://github.com/af-a/ih2_azzurra_hand_driver</url>
   <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
-  <depend>sensor_msgs</depend>
+  <depend>ih2_azzurra_hand_driver_interfaces</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

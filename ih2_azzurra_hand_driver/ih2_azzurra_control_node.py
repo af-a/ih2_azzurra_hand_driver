@@ -15,9 +15,14 @@ from launch_ros.substitutions import FindPackageShare
 from rcl_interfaces.msg import ParameterDescriptor, IntegerRange, SetParametersResult
 
 from std_msgs.msg import Bool, String
-from sensor_msgs.msg import JointState
 
 from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController, getHex
+from ih2_azzurra_hand_driver_interfaces.msg import HandState
+
+# Colorized logging variables:
+YELLOW = '\033[1;33m'
+GREEN = '\033[92m'
+RESET = '\033[0m'
 
 ## ----------------------------------------------------------------------
 ## ROS Nodes, Callbacks and Message Initializations:
@@ -38,7 +43,7 @@ class Ih2AzzurraControlNode(Node):
         self.serial_port = self.get_parameter('serial_port').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
         self.action_command_topic = '~/action_command'
-        self.joint_states_topic = '~/joint_states'
+        self.hand_state_topic = '~/hand_state'
 
         # Initialize subscribers:
         self.action_command_subscription = self.create_subscription(String,
@@ -46,7 +51,7 @@ class Ih2AzzurraControlNode(Node):
                                                                    self.action_command_callback,
                                                                    10)
         # Initialize publishers:
-        self.joint_states_publisher = self.create_publisher(JointState, self.joint_states_topic, 10)
+        self.hand_state_publisher = self.create_publisher(HandState, self.hand_state_topic, 10)
 
         # Initialize data variables:
         self.hand_controller = IH2AzzurraHandController(serial_port=self.serial_port)
@@ -61,9 +66,9 @@ class Ih2AzzurraControlNode(Node):
             
         # Set up joint states publisher:
         publish_rate = 100
-        self.joint_states_timer = self.create_timer(1 / publish_rate, self.joint_states_timer_callback)
-        self.joint_states_msg = JointState()
-        self.joint_states_msg.name = list(self.hand_controller.doa_ids_dict.keys())
+        self.hand_state_timer = self.create_timer(1 / publish_rate, self.hand_state_timer_callback)
+        self.hand_state_msg = HandState()
+        self.hand_state_msg.motor_name = list(self.hand_controller.doa_ids_dict.keys())
 
         # Load default hand poses config:
         with open(self.pose_config_file_path, 'r') as file_handle:
@@ -102,13 +107,17 @@ class Ih2AzzurraControlNode(Node):
 
             if not self.executing_pose_motion:
                 self.hand_controller.set_pose(joint_positions_list=desired_joint_states)
+                self.hand_state_msg.named_pose = ''
 
             return SetParametersResult(successful=True)
 
-    def joint_states_timer_callback(self):
-        ## TODO: Create custom msg to allow ints or switch to saving deg values
-        self.joint_states_msg.position = [float(value) for value in self.hand_controller.get_pose()]
-        self.joint_states_publisher.publish(self.joint_states_msg)
+    def hand_state_timer_callback(self):
+        self.hand_state_msg.header.stamp = self.get_clock().now().to_msg()
+        self.hand_state_msg.motor_position = self.hand_controller.get_pose()
+        self.hand_state_msg.motor_moving = [bool(int(status_bits[-1])) for status_bits in self.hand_controller.get_finger_status()]
+        self.hand_state_msg.motor_current = self.hand_controller.get_motor_currents()
+
+        self.hand_state_publisher.publish(self.hand_state_msg)
 
     def action_command_callback(self, msg):
         self.get_logger().info(f'Received action command message: {msg.data}')
@@ -117,18 +126,20 @@ class Ih2AzzurraControlNode(Node):
     def execute_hand_pose(self, hand_pose_str):
         self.get_logger().info(f'Attempting to execute pose...')
         try:
-            self.get_logger().info(f'Executing pose {hand_pose_str}...')
             joint_positions_list = self.hand_poses_dict[hand_pose_str]
             self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
             self.executing_pose_motion = True
+            self.get_logger().info(f'{GREEN}Executing pose "{hand_pose_str}"...{RESET}')
 
             # Update params:
             self.get_logger().info(f'Updating ROS parameters...')
             self.set_parameters([rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions_list[doa_id]) \
                                         for doa_id, doa_name in enumerate(self.doa_names)])
             self.executing_pose_motion = False
+
+            self.hand_state_msg.named_pose = hand_pose_str
         except KeyError:
-            self.get_logger().warn(f'Pose definition not found in pose config file! Ignoring request.')
+            self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
 
 def main(args=None):
     ## ----------------------------------------------------------------------
