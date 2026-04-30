@@ -116,5 +116,5 @@ class IH2AzzurraHandController(object):
         finger_status_string_list = []
         for doa, id_str in self.doa_ids_dict.items():
             self.serial_interface_object.write(bytes.fromhex('4B' + id_str))
-            finger_status_string_list.append(bin(int.from_bytes(self.serial_interface_object.read(), byteorder='big')))
+            finger_status_string_list.append(format(int.from_bytes(self.serial_interface_object.read(), byteorder='big'), '08b'))
         return finger_status_string_list
