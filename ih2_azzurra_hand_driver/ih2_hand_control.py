@@ -107,7 +107,15 @@ class IH2AzzurraHandController(object):
         motor_currents_list = []
         for doa, id_str in self.doa_ids_dict.items():
             self.serial_interface_object.write(bytes.fromhex('49' + id_str))
-            motor_currents_list.append(int.from_bytes(self.serial_interface_object.read(), byteorder='big'))
+            byte_1 = format(int.from_bytes(self.serial_interface_object.read(), byteorder='big'), '08b')
+            byte_2 = format(int.from_bytes(self.serial_interface_object.read(), byteorder='big'), '08b')
+            current_10_bit_value = byte_1[-2:] + byte_2
+            if doa == 'thumb_abduction':
+                current_float_value = 0.81 * int(current_10_bit_value, 2)
+            else:
+                current_float_value = 1.1 * int(current_10_bit_value, 2)
+
+            motor_currents_list.append(current_float_value)
 
         return motor_currents_list
 
