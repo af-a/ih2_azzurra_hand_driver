@@ -19,6 +19,11 @@ from std_msgs.msg import Bool, String
 from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController, getHex
 from ih2_azzurra_hand_driver_interfaces.msg import HandState
 
+# Colorized logging variables:
+YELLOW = '\033[1;33m'
+GREEN = '\033[92m'
+RESET = '\033[0m'
+
 ## ----------------------------------------------------------------------
 ## ROS Nodes, Callbacks and Message Initializations:
 ## ----------------------------------------------------------------------
@@ -118,10 +123,10 @@ class Ih2AzzurraControlNode(Node):
     def execute_hand_pose(self, hand_pose_str):
         self.get_logger().info(f'Attempting to execute pose...')
         try:
-            self.get_logger().info(f'Executing pose {hand_pose_str}...')
             joint_positions_list = self.hand_poses_dict[hand_pose_str]
             self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
             self.executing_pose_motion = True
+            self.get_logger().info(f'{GREEN}Executing pose {hand_pose_str}...{RESET}')
 
             # Update params:
             self.get_logger().info(f'Updating ROS parameters...')
@@ -131,7 +136,7 @@ class Ih2AzzurraControlNode(Node):
 
             self.hand_state_msg.named_pose = hand_pose_str
         except KeyError:
-            self.get_logger().warn(f'Pose definition not found in pose config file! Ignoring request.')
+            self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
 
 def main(args=None):
     ## ----------------------------------------------------------------------
