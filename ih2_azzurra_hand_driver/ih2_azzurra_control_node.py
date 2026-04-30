@@ -107,6 +107,7 @@ class Ih2AzzurraControlNode(Node):
 
     def joint_states_timer_callback(self):
         ## TODO: Create custom msg to allow ints or switch to saving deg values
+        self.joint_states_msg.header.stamp = self.get_clock().now().to_msg()
         self.joint_states_msg.position = [float(value) for value in self.hand_controller.get_pose()]
         self.joint_states_publisher.publish(self.joint_states_msg)
 
