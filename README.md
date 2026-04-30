@@ -97,10 +97,10 @@ ROS:
 
 ## Future Plans
 
-- [ ] Add publishing of current hand information (joint angles, current, etc.) in standardized ROS messages
-- [ ] Add feature: read hand pose definitions for YAML files
+- [X] Add publishing of current hand information (joint angles, current, etc.) in standardized ROS messages
+- [X] Add feature: read hand pose definitions from YAML files
 - [ ] Add feature: continuous control of individual DoAs through ROS topics
-- [ ] Add feature: a GUI plugin thtat exposes and enables control of variables
+- [X] Add feature: a GUI plugin thtat exposes and enables control of variables
 
 <!-- TODO: Add references, etc., if any
 ## Credits
