@@ -16,6 +16,7 @@ from launch_ros.substitutions import FindPackageShare
 from rcl_interfaces.msg import ParameterDescriptor, IntegerRange, SetParametersResult
 
 from std_msgs.msg import Bool, String
+from action_msgs.msg import GoalStatus
 
 from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController, getHex
 from ih2_azzurra_hand_driver_interfaces.msg import HandState
@@ -51,8 +52,7 @@ class Ih2AzzurraControlNode(Node):
 
         # Initialize action servers:
         self.get_logger().info('Initializing MoveHand server...')
-        self.move_hand_server = ActionServer(self, MoveHand, '~/MoveHand',
-                                             self.move_hand_callback)
+        self.move_hand_server = ActionServer(self, MoveHand, '~/MoveHand', self.move_hand_callback)
         self.get_logger().info('Initializing MoveHandToNamedPose server...')
         self.move_hand_to_named_pose_server = ActionServer(self, MoveHandToNamedPose, '~/MoveHandToNamedPose', 
                                                            self.move_hand_to_named_pose_callback)
@@ -135,12 +135,12 @@ class Ih2AzzurraControlNode(Node):
     def move_hand_to_named_pose_callback(self, goal_handle):
         self.get_logger().info('Executing MoveHandToNamedPose goal...')
 
-        succeeded = self.execute_named_hand_pose(goal_handle.request.desired_named_pose)
-        if succeeded:
+        if self.execute_named_hand_pose(goal_handle.request.desired_named_pose):
             goal_handle.succeed()
         else:
             goal_handle.abort()
-        return MoveHandToNamedPose.Result(final_state=self.hand_state_msg, success=succeeded)
+        return MoveHandToNamedPose.Result(final_state=self.hand_state_msg, 
+                                          success=True if goal_handle.status == GoalStatus.STATUS_SUCCEEDED else False)
 
     def execute_hand_pose(self, desired_joint_states_list):
         joint_positions_list = desired_joint_states_list
