@@ -155,8 +155,7 @@ class Ih2AzzurraControlNode(Node):
         self.executing_pose_motion = True
         self.get_logger().info(f'{GREEN}Setting motor positions to {desired_joint_states_list}...{RESET}')
 
-        # Update params:
-        self.get_logger().info(f'Updating ROS parameters...')
+        # Update ROS params:
         self.set_parameters([rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions_list[doa_id]) \
                                     for doa_id, doa_name in enumerate(self.doa_names)])
         self.executing_pose_motion = False
