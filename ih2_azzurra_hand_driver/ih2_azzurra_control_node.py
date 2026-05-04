@@ -50,8 +50,10 @@ class Ih2AzzurraControlNode(Node):
         self.hand_state_publisher = self.create_publisher(HandState, self.hand_state_topic, 10)
 
         # Initialize action servers:
+        self.get_logger().info('Initializing MoveHand server...')
         self.move_hand_server = ActionServer(self, MoveHand, '~/MoveHand',
                                              self.move_hand_callback)
+        self.get_logger().info('Initializing MoveHandToNamedPose server...')
         self.move_hand_to_named_pose_server = ActionServer(self, MoveHandToNamedPose, '~/MoveHandToNamedPose', 
                                                            self.move_hand_to_named_pose_callback)
 
@@ -173,9 +175,6 @@ def main(args=None):
     ## Execution:
     ## ----------------------------------------------------------------------
 
-    ih2_azzurra_control_node.get_logger().info(f'Will listen to messages for action command ' + \
-                                               f'({ih2_azzurra_control_node.action_command_topic}) ' + \
-                                               f'...')
     try:
         rclpy.spin(ih2_azzurra_control_node)
     except SystemExit:
