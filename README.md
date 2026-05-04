@@ -80,11 +80,6 @@ To launch the driver node, run:
 ros2 launch ih2_azzurra_hand_driver ih2_driver.launch.py
 ```
 
-To execute a named hand pose from the set defined in [config/default_hand_poses.yaml](config/default_hand_poses.yaml), publish to the `/driver_node/action_command` as follows:
-```bash
-ros2 topic pub --once /driver_node/action_command std_msgs/msg/String '{"data": "open"}'
-```
-
 The launch file also starts an `rqt_reconfigure` GUI:
 <p float="left" align="center">
   <img src="docs/images/reconfigure_gui_screenshot.png" width="90%" />
@@ -92,6 +87,26 @@ The launch file also starts an `rqt_reconfigure` GUI:
 
 A desired named pose can be executed by entering its name in the `action_command_string` field. In addition, the position if each of the five degrees of actuation (DoAs) can be individually controlled by modifying its value using the sliders or adjacent fields on the GUI.
 
+### Actions
+
+The ROS package includes two action servers that utilize interfaces from [ih2_azzurra_hand_driver_interfaces](https://github.com/af-a/ih2_azzurra_hand_driver_interfaces):
+* `MoveHand`: moves the hand by setting motor positions to individual values provided in the request `desired_motor_position` field. Returns the final hand state.
+* `MoveHandToNamedPose`: moves the hand by setting motor positions to individual values that correspond to a known, named pose that is provided in the request `desired_named_pose` field. Returns whether the action was successfull and the final hand state.
+
+To move the hand to pose defined by a set of finger motor positions, send a `MoveHand` goal:
+```bash
+ros2 action send_goal /driver_node/MoveHand ih2_azzurra_hand_driver_interfaces/action/MoveHand "{'desired_motor_position': [10, 100, 10, 10, 180]}"
+```
+
+To execute a named hand pose from the set defined in [config/default_hand_poses.yaml](config/default_hand_poses.yaml), send a `MoveHandToNamedPose` goal:
+```bash
+ros2 action send_goal /driver_node/MoveHandToNamedPose ih2_azzurra_hand_driver_interfaces/action/MoveHandToNamedPose "{'desired_named_pose': 'open'}"
+```
+
+Alternatively, publish the pose name directly to the `/driver_node/action_command` topic:
+```bash
+ros2 topic pub --once /driver_node/action_command std_msgs/msg/String '{"data": "open"}'
+```
 
 ## Directory Structure
 
