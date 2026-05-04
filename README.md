@@ -141,7 +141,7 @@ ROS:
 * `ament_cmake_python`
 * `std_msgs`
 * `action_msgs`
-* `ih2_azzurra_hand_driver_interfaces`
+* [ih2_azzurra_hand_driver_interfaces](https://github.com/af-a/ih2_azzurra_hand_driver_interfaces)
 
 ## Future Plans
 
