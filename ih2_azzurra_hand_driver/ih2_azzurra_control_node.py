@@ -11,13 +11,16 @@ import yaml
 import rclpy
 
 from rclpy.node import Node
+from rclpy.action import ActionServer
 from launch_ros.substitutions import FindPackageShare
 from rcl_interfaces.msg import ParameterDescriptor, IntegerRange, SetParametersResult
 
 from std_msgs.msg import Bool, String
+from action_msgs.msg import GoalStatus
 
 from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController, getHex
 from ih2_azzurra_hand_driver_interfaces.msg import HandState
+from ih2_azzurra_hand_driver_interfaces.action import MoveHand, MoveHandToNamedPose
 
 # Colorized logging variables:
 YELLOW = '\033[1;33m'
@@ -38,20 +41,21 @@ class Ih2AzzurraControlNode(Node):
         # Get node parameters:
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
         self.declare_parameter('pose_config_file_path', os.path.join(self.pkg_share_path, 'default_hand_poses.yaml'))
-        self.declare_parameter('action_command_string', 'Type grasp name here...')
+        self.declare_parameter('named_pose', 'Type pose name here...')
 
         self.serial_port = self.get_parameter('serial_port').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
-        self.action_command_topic = '~/action_command'
         self.hand_state_topic = '~/hand_state'
 
-        # Initialize subscribers:
-        self.action_command_subscription = self.create_subscription(String,
-                                                                   self.action_command_topic,
-                                                                   self.action_command_callback,
-                                                                   10)
         # Initialize publishers:
         self.hand_state_publisher = self.create_publisher(HandState, self.hand_state_topic, 10)
+
+        # Initialize action servers:
+        self.get_logger().info('Initializing MoveHand server...')
+        self.move_hand_server = ActionServer(self, MoveHand, '~/MoveHand', self.move_hand_callback)
+        self.get_logger().info('Initializing MoveHandToNamedPose server...')
+        self.move_hand_to_named_pose_server = ActionServer(self, MoveHandToNamedPose, '~/MoveHandToNamedPose', 
+                                                           self.move_hand_to_named_pose_callback)
 
         # Initialize data variables:
         self.hand_controller = IH2AzzurraHandController(serial_port=self.serial_port)
@@ -94,19 +98,20 @@ class Ih2AzzurraControlNode(Node):
         modified_joint_param_names = list(set(modified_param_names).intersection(set(self.doa_names)))
         # self.get_logger().info(f'[DEBUG] modified_joint_param_names: {modified_joint_param_names}')
 
-        if 'action_command_string' in modified_param_names:
-            action_command_param = next(param for param in params if param.name == 'action_command_string')
-            self.execute_hand_pose(action_command_param.value)
+        if 'named_pose' in modified_param_names:
+            named_pose_param = next(param for param in params if param.name == 'named_pose')
+            self.execute_named_hand_pose(named_pose_param.value)
+
             return SetParametersResult(successful=True)
         elif modified_joint_param_names != []:
-            desired_joint_states = [int(value) for value in self.hand_controller.get_pose()]
+            desired_joint_states_list = [int(value) for value in self.hand_controller.get_pose()]
             for param in params:
                 # self.get_logger().info(f'[DEBUG] Param modified: {param.name} --> {param.value}')
                 if param.name in self.doa_names:
-                    desired_joint_states[self.doa_names.index(param.name)] = int(param.value)
+                    desired_joint_states_list[self.doa_names.index(param.name)] = int(param.value)
 
             if not self.executing_pose_motion:
-                self.hand_controller.set_pose(joint_positions_list=desired_joint_states)
+                self.hand_controller.set_pose(joint_positions_list=desired_joint_states_list)
                 self.hand_state_msg.named_pose = ''
 
             return SetParametersResult(successful=True)
@@ -119,27 +124,45 @@ class Ih2AzzurraControlNode(Node):
 
         self.hand_state_publisher.publish(self.hand_state_msg)
 
-    def action_command_callback(self, msg):
-        self.get_logger().info(f'Received action command message: {msg.data}')
-        self.execute_hand_pose(msg.data)
+    def move_hand_callback(self, goal_handle):
+        self.get_logger().info('Executing MoveHand goal...')
+        desired_joint_states_list = [int(value) for value in goal_handle.request.desired_motor_position]
+        self.execute_hand_pose(desired_joint_states_list)
+        goal_handle.succeed()
 
-    def execute_hand_pose(self, hand_pose_str):
-        self.get_logger().info(f'Attempting to execute pose...')
+        return MoveHand.Result(final_state=self.hand_state_msg)
+
+    def move_hand_to_named_pose_callback(self, goal_handle):
+        self.get_logger().info('Executing MoveHandToNamedPose goal...')
+
+        if self.execute_named_hand_pose(goal_handle.request.desired_named_pose):
+            goal_handle.succeed()
+        else:
+            goal_handle.abort()
+        return MoveHandToNamedPose.Result(final_state=self.hand_state_msg, 
+                                          success=True if goal_handle.status == GoalStatus.STATUS_SUCCEEDED else False)
+
+    def execute_hand_pose(self, desired_joint_states_list):
+        joint_positions_list = desired_joint_states_list
+        self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
+        self.executing_pose_motion = True
+        self.get_logger().info(f'{GREEN}Setting motor positions to {desired_joint_states_list}...{RESET}')
+
+        # Update ROS params:
+        self.set_parameters([rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions_list[doa_id]) \
+                                    for doa_id, doa_name in enumerate(self.doa_names)])
+        self.executing_pose_motion = False
+
+    def execute_named_hand_pose(self, desired_named_pose):
+        self.get_logger().info(f'Attempting to execute named pose "{desired_named_pose}"...')
         try:
-            joint_positions_list = self.hand_poses_dict[hand_pose_str]
-            self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
-            self.executing_pose_motion = True
-            self.get_logger().info(f'{GREEN}Executing pose "{hand_pose_str}"...{RESET}')
-
-            # Update params:
-            self.get_logger().info(f'Updating ROS parameters...')
-            self.set_parameters([rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions_list[doa_id]) \
-                                        for doa_id, doa_name in enumerate(self.doa_names)])
-            self.executing_pose_motion = False
-
-            self.hand_state_msg.named_pose = hand_pose_str
+            joint_positions_list = self.hand_poses_dict[desired_named_pose]
+            self.execute_hand_pose(joint_positions_list)
+            self.hand_state_msg.named_pose = desired_named_pose
+            return True
         except KeyError:
             self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+            return False
 
 def main(args=None):
     ## ----------------------------------------------------------------------
@@ -152,9 +175,6 @@ def main(args=None):
     ## Execution:
     ## ----------------------------------------------------------------------
 
-    ih2_azzurra_control_node.get_logger().info(f'Will listen to messages for action command ' + \
-                                               f'({ih2_azzurra_control_node.action_command_topic}) ' + \
-                                               f'...')
     try:
         rclpy.spin(ih2_azzurra_control_node)
     except SystemExit:

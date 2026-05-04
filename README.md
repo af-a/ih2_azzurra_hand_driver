@@ -26,27 +26,58 @@ Designed for and tested on Ubuntu 22.04 LTS, ROS (2) Humble with Python 3.10.
 
 ## Overview
 
-TODO
+The <b>ih2_azzurra_hand_driver</b> enables controlling and tracking the state of a Prensilia IH2 Azzurra hand through a Python API.
+
+It can be built as a ROS-independent Python package, which contains the core functionalities, or as a ROS2 package: a wrapper which adds ROS integration. In addition to implementing ROS actions, the ROS wrapper also adds a GUI through which the hand can be controlled.
 
 ## Installation
 
-### Build Package
+### Build Python Package
 
-After cloning this repository in your workspace, build the package using:
+To build the standalone Python package, install with pip when located in the root directory:
+```bash
+pip3 install .
 ```
+
+### Build ROS Package
+
+To build the ROS package, clone the repository into your ROS workspace and build with:
+```bash
 colcon build --packages-select ih2_azzurra_hand_driver
 ```
 
+When the ROS workspace is sourced after building, the Python module can also be imported and used as in the standalone Python build.
+
 ## Usage
+
+### Python Driver
+
+With the Python package installed and the hand connected via a USB connection, the driver can be initialized as follows:
+```python
+>>> from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController
+>>> hand_controller = IH2AzzurraHandController(serial_port='/dev/ttyUSB0')
+>>> hand_controller.initialize()
+```
+
+<b>Note:</b> the value of `serial_port` may need to be adjusted.
+
+The current pose (positions of each DoA motor) can be fetched by calling:
+```python
+>>> hand_controller.get_pose()
+```
+
+The pose can be set through:
+```python
+>>> hand_controller.set_pose([2, 46, 43, 19, 20])
+```
+
+<b>Note:</b> Following the convention of Prensilia, motor positions are encoded as an 8-bit integer (range (0, 255)), for flexion/extension or abduction/adduction (thumb).
+
+### ROS Interface
 
 To launch the driver node, run:
 ```bash
 ros2 launch ih2_azzurra_hand_driver ih2_driver.launch.py
-```
-
-To execute a named hand pose from the set defined in [config/default_hand_poses.yaml](config/default_hand_poses.yaml), publish to the `/driver_node/action_command` as follows:
-```bash
-ros2 topic pub --once /driver_node/action_command std_msgs/msg/String '{"data": "open"}'
 ```
 
 The launch file also starts an `rqt_reconfigure` GUI:
@@ -54,8 +85,23 @@ The launch file also starts an `rqt_reconfigure` GUI:
   <img src="docs/images/reconfigure_gui_screenshot.png" width="90%" />
 </p>
 
-A desired named pose can be executed by entering its name in the `action_command_string` field. In addition, the position if each of the five degrees of actuation (DoAs) can be individually controlled by modifying its value using the sliders or adjacent fields on the GUI.
+A desired named pose can be executed by entering its name in the `named_pose` field. In addition, the position if each of the five degrees of actuation (DoAs) can be individually controlled by modifying its value using the sliders or adjacent entry fields on the GUI.
 
+### Actions
+
+The ROS package includes two action servers that utilize the [ih2_azzurra_hand_driver_interfaces](https://github.com/af-a/ih2_azzurra_hand_driver_interfaces):
+* `MoveHand`: moves the hand by setting motor positions to individual values provided in the request field: `desired_motor_position`. Returns the final hand state.
+* `MoveHandToNamedPose`: moves the hand by setting motor positions to individual values that correspond to a known, named pose that is provided in the request field: `desired_named_pose`. Returns whether the action was successfull and the resulting hand state.
+
+To move the hand to a pose defined by a set of finger motor positions, send a `MoveHand` goal:
+```bash
+ros2 action send_goal /driver_node/MoveHand ih2_azzurra_hand_driver_interfaces/action/MoveHand "{'desired_motor_position': [10, 100, 10, 10, 180]}"
+```
+
+To execute a named hand pose from the set defined in [config/default_hand_poses.yaml](config/default_hand_poses.yaml), send a `MoveHandToNamedPose` goal:
+```bash
+ros2 action send_goal /driver_node/MoveHandToNamedPose ih2_azzurra_hand_driver_interfaces/action/MoveHandToNamedPose "{'desired_named_pose': 'open'}"
+```
 
 ## Directory Structure
 
@@ -88,18 +134,20 @@ ih2_azzurra_hand_driver
 
 Python:
 * `pyserial`
+* `yaml`
 
 ROS:
 * `rclpy`
 * `ament_cmake_python`
 * `std_msgs`
-* `ih2_azzurra_hand_driver_interfaces`
+* `action_msgs`
+* [ih2_azzurra_hand_driver_interfaces](https://github.com/af-a/ih2_azzurra_hand_driver_interfaces)
 
 ## Future Plans
 
 - [X] Add publishing of current hand information (joint angles, current, etc.) in standardized ROS messages
 - [X] Add feature: read hand pose definitions from YAML files
-- [ ] Add feature: continuous control of individual DoAs through ROS topics
+- [X] Add feature: action interfaces for setting DoA positions
 - [X] Add feature: a GUI plugin thtat exposes and enables control of variables
 
 <!-- TODO: Add references, etc., if any

@@ -18,8 +18,6 @@ setup(
     packages=find_packages(include=[package_name]),
     license="MIT",
     install_requires=[
-        "rclpy",
-        "std-msgs",
         "pyserial",
         "PyYAML",
     ],
