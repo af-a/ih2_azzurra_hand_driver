@@ -40,18 +40,11 @@ class Ih2AzzurraControlNode(Node):
         # Get node parameters:
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
         self.declare_parameter('pose_config_file_path', os.path.join(self.pkg_share_path, 'default_hand_poses.yaml'))
-        self.declare_parameter('action_command_string', 'Type grasp name here...')
 
         self.serial_port = self.get_parameter('serial_port').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
-        self.action_command_topic = '~/action_command'
         self.hand_state_topic = '~/hand_state'
 
-        # Initialize subscribers:
-        self.action_command_subscription = self.create_subscription(String,
-                                                                   self.action_command_topic,
-                                                                   self.action_command_callback,
-                                                                   10)
         # Initialize publishers:
         self.hand_state_publisher = self.create_publisher(HandState, self.hand_state_topic, 10)
 
@@ -127,9 +120,6 @@ class Ih2AzzurraControlNode(Node):
         self.hand_state_msg.motor_current = self.hand_controller.get_motor_currents()
 
         self.hand_state_publisher.publish(self.hand_state_msg)
-
-    def action_command_callback(self, msg):
-        self.execute_named_hand_pose(msg.data)
 
     def move_hand_callback(self, goal_handle):
         self.get_logger().info('Executing MoveHand goal...')
