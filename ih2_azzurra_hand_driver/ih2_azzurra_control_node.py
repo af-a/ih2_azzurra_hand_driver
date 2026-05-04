@@ -96,17 +96,25 @@ class Ih2AzzurraControlNode(Node):
 
         if 'action_command_string' in modified_param_names:
             action_command_param = next(param for param in params if param.name == 'action_command_string')
-            self.execute_hand_pose(action_command_param.value)
+
+            self.get_logger().info(f'Attempting to execute named pose "{action_command_param.value}"...')
+            try:
+                joint_positions_list = self.hand_poses_dict[action_command_param.value]
+                self.execute_hand_pose(joint_positions_list)
+                self.hand_state_msg.named_pose = action_command_param.value
+            except KeyError:
+                self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+
             return SetParametersResult(successful=True)
         elif modified_joint_param_names != []:
-            desired_joint_states = [int(value) for value in self.hand_controller.get_pose()]
+            desired_joint_states_list = [int(value) for value in self.hand_controller.get_pose()]
             for param in params:
                 # self.get_logger().info(f'[DEBUG] Param modified: {param.name} --> {param.value}')
                 if param.name in self.doa_names:
-                    desired_joint_states[self.doa_names.index(param.name)] = int(param.value)
+                    desired_joint_states_list[self.doa_names.index(param.name)] = int(param.value)
 
             if not self.executing_pose_motion:
-                self.hand_controller.set_pose(joint_positions_list=desired_joint_states)
+                self.hand_controller.set_pose(joint_positions_list=desired_joint_states_list)
                 self.hand_state_msg.named_pose = ''
 
             return SetParametersResult(successful=True)
@@ -120,26 +128,27 @@ class Ih2AzzurraControlNode(Node):
         self.hand_state_publisher.publish(self.hand_state_msg)
 
     def action_command_callback(self, msg):
-        self.get_logger().info(f'Received action command message: {msg.data}')
-        self.execute_hand_pose(msg.data)
-
-    def execute_hand_pose(self, hand_pose_str):
-        self.get_logger().info(f'Attempting to execute pose...')
+        self.get_logger().info(f'Attempting to execute named pose "{msg.data}"...')
         try:
-            joint_positions_list = self.hand_poses_dict[hand_pose_str]
-            self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
-            self.executing_pose_motion = True
-            self.get_logger().info(f'{GREEN}Executing pose "{hand_pose_str}"...{RESET}')
-
-            # Update params:
-            self.get_logger().info(f'Updating ROS parameters...')
-            self.set_parameters([rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions_list[doa_id]) \
-                                        for doa_id, doa_name in enumerate(self.doa_names)])
-            self.executing_pose_motion = False
-
-            self.hand_state_msg.named_pose = hand_pose_str
+            joint_positions_list = self.hand_poses_dict[msg.data]
+            self.execute_hand_pose(joint_positions_list)
+            self.hand_state_msg.named_pose = msg.data
         except KeyError:
             self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+
+
+    def execute_hand_pose(self, desired_joint_states_list):
+        joint_positions_list = desired_joint_states_list
+        self.hand_controller.set_pose(joint_positions_list=joint_positions_list)
+        self.executing_pose_motion = True
+        self.get_logger().info(f'{GREEN}Setting motor positions to {desired_joint_states_list}...{RESET}')
+
+        # Update params:
+        self.get_logger().info(f'Updating ROS parameters...')
+        self.set_parameters([rclpy.parameter.Parameter(doa_name, rclpy.Parameter.Type.INTEGER, joint_positions_list[doa_id]) \
+                                    for doa_id, doa_name in enumerate(self.doa_names)])
+        self.executing_pose_motion = False
+
 
 def main(args=None):
     ## ----------------------------------------------------------------------
