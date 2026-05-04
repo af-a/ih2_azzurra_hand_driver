@@ -26,18 +26,54 @@ Designed for and tested on Ubuntu 22.04 LTS, ROS (2) Humble with Python 3.10.
 
 ## Overview
 
-TODO
+The <b>ih2_azzurra_hand_driver</b> enables controlling and tracking the state of a Prensilia IH2 Azzurra hand through a Python interfaces.
+
+It can be built as a ROS-independent Python package, which contains the core functionalities, or optionally as a ROS2 Python package: a wrapper which adds ROS integration. In addition to implementing control through ROS actions, the ROS wrapper also adds a GUI through which the hand can be controlled.
 
 ## Installation
 
-### Build Package
+### Build Python Package
 
-After cloning this repository in your workspace, build the package using:
+To build the standalone Python package, install with pip when located in the root directory:
+```bash
+pip3 install .
 ```
+
+### Build ROS Package
+
+To build the ROS package, clone the repository into your ROS workspace and build with:
+```bash
 colcon build --packages-select ih2_azzurra_hand_driver
 ```
 
+When the ROS workspace is sourced after building, the Python module can also be imported and used as in the standalone Python build.
+
 ## Usage
+
+### Python Driver
+
+With the Python package installed and the hand connected through a USB connection, the driver can be initialized as follows:
+```python
+>>> from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController
+>>> hand_controller = IH2AzzurraHandController(serial_port='/dev/ttyUSB0')
+>>> hand_controller.initialize()
+```
+
+<b>Note:</b> the value of `serial_port` may need to be adjusted.
+
+The current pose (positions of each DoA motor) can be fetched by calling:
+```python
+>>> hand_controller.get_pose()
+```
+
+The pose can be set through:
+```python
+>>> hand_controller.set_pose([2, 46, 43, 19, 20])
+```
+
+<b>Note:</b> Following the convention of Prensilia, motor positions are encoded as an 8-bit integer (range (0, 255)), for flexion/extension or abduction/adduction (thumb).
+
+### ROS Interface
 
 To launch the driver node, run:
 ```bash
