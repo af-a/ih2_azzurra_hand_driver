@@ -104,14 +104,7 @@ class Ih2AzzurraControlNode(Node):
 
         if 'action_command_string' in modified_param_names:
             action_command_param = next(param for param in params if param.name == 'action_command_string')
-
-            self.get_logger().info(f'Attempting to execute named pose "{action_command_param.value}"...')
-            try:
-                joint_positions_list = self.hand_poses_dict[action_command_param.value]
-                self.execute_hand_pose(joint_positions_list)
-                self.hand_state_msg.named_pose = action_command_param.value
-            except KeyError:
-                self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+            self.execute_named_hand_pose(action_command_param.value)
 
             return SetParametersResult(successful=True)
         elif modified_joint_param_names != []:
@@ -136,13 +129,7 @@ class Ih2AzzurraControlNode(Node):
         self.hand_state_publisher.publish(self.hand_state_msg)
 
     def action_command_callback(self, msg):
-        self.get_logger().info(f'Attempting to execute named pose "{msg.data}"...')
-        try:
-            joint_positions_list = self.hand_poses_dict[msg.data]
-            self.execute_hand_pose(joint_positions_list)
-            self.hand_state_msg.named_pose = msg.data
-        except KeyError:
-            self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+        self.execute_named_hand_pose(msg.data)
 
     def move_hand_callback(self, goal_handle):
         self.get_logger().info('Executing MoveHand goal...')
@@ -155,20 +142,12 @@ class Ih2AzzurraControlNode(Node):
     def move_hand_to_named_pose_callback(self, goal_handle):
         self.get_logger().info('Executing MoveHandToNamedPose goal...')
 
-        desired_named_pose = goal_handle.request.desired_named_pose
-        self.get_logger().info(f'Attempting to execute named pose "{desired_named_pose}"...')
-        try:
-            joint_positions_list = self.hand_poses_dict[desired_named_pose]
-            self.execute_hand_pose(joint_positions_list)
-            self.hand_state_msg.named_pose = desired_named_pose
+        succeeded = self.execute_named_hand_pose(goal_handle.request.desired_named_pose)
+        if succeeded:
             goal_handle.succeed()
-            result = MoveHandToNamedPose.Result(final_state=self.hand_state_msg, success=True)
-        except KeyError:
-            self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+        else:
             goal_handle.abort()
-            result = MoveHandToNamedPose.Result(final_state=self.hand_state_msg, success=False)
-
-        return result
+        return MoveHandToNamedPose.Result(final_state=self.hand_state_msg, success=succeeded)
 
     def execute_hand_pose(self, desired_joint_states_list):
         joint_positions_list = desired_joint_states_list
@@ -182,6 +161,16 @@ class Ih2AzzurraControlNode(Node):
                                     for doa_id, doa_name in enumerate(self.doa_names)])
         self.executing_pose_motion = False
 
+    def execute_named_hand_pose(self, desired_named_pose):
+        self.get_logger().info(f'Attempting to execute named pose "{desired_named_pose}"...')
+        try:
+            joint_positions_list = self.hand_poses_dict[desired_named_pose]
+            self.execute_hand_pose(joint_positions_list)
+            self.hand_state_msg.named_pose = desired_named_pose
+            return True
+        except KeyError:
+            self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+            return False
 
 def main(args=None):
     ## ----------------------------------------------------------------------
