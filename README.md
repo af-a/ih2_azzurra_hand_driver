@@ -88,18 +88,20 @@ ih2_azzurra_hand_driver
 
 Python:
 * `pyserial`
+* `yaml`
 
 ROS:
 * `rclpy`
 * `ament_cmake_python`
 * `std_msgs`
+* `action_msgs`
 * `ih2_azzurra_hand_driver_interfaces`
 
 ## Future Plans
 
 - [X] Add publishing of current hand information (joint angles, current, etc.) in standardized ROS messages
 - [X] Add feature: read hand pose definitions from YAML files
-- [ ] Add feature: continuous control of individual DoAs through ROS topics
+- [X] Add feature: action interfaces for setting DoA positions
 - [X] Add feature: a GUI plugin thtat exposes and enables control of variables
 
 <!-- TODO: Add references, etc., if any
