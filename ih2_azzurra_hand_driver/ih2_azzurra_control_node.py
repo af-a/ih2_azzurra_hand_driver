@@ -19,7 +19,7 @@ from std_msgs.msg import Bool, String
 
 from ih2_azzurra_hand_driver.ih2_hand_control import IH2AzzurraHandController, getHex
 from ih2_azzurra_hand_driver_interfaces.msg import HandState
-from ih2_azzurra_hand_driver_interfaces.action import MoveHand
+from ih2_azzurra_hand_driver_interfaces.action import MoveHand, MoveHandToNamedPose
 
 # Colorized logging variables:
 YELLOW = '\033[1;33m'
@@ -56,7 +56,10 @@ class Ih2AzzurraControlNode(Node):
         self.hand_state_publisher = self.create_publisher(HandState, self.hand_state_topic, 10)
 
         # Initialize action servers:
-        self.move_hand_server = ActionServer(self, MoveHand, 'MoveHand', self.move_hand_callback)
+        self.move_hand_server = ActionServer(self, MoveHand, '~/MoveHand',
+                                             self.move_hand_callback)
+        self.move_hand_to_named_pose_server = ActionServer(self, MoveHandToNamedPose, '~/MoveHandToNamedPose', 
+                                                           self.move_hand_to_named_pose_callback)
 
         # Initialize data variables:
         self.hand_controller = IH2AzzurraHandController(serial_port=self.serial_port)
@@ -148,6 +151,24 @@ class Ih2AzzurraControlNode(Node):
         goal_handle.succeed()
 
         return MoveHand.Result(final_state=self.hand_state_msg)
+
+    def move_hand_to_named_pose_callback(self, goal_handle):
+        self.get_logger().info('Executing MoveHandToNamedPose goal...')
+
+        desired_named_pose = goal_handle.request.desired_named_pose
+        self.get_logger().info(f'Attempting to execute named pose "{desired_named_pose}"...')
+        try:
+            joint_positions_list = self.hand_poses_dict[desired_named_pose]
+            self.execute_hand_pose(joint_positions_list)
+            self.hand_state_msg.named_pose = desired_named_pose
+            goal_handle.succeed()
+            result = MoveHandToNamedPose.Result(final_state=self.hand_state_msg, success=True)
+        except KeyError:
+            self.get_logger().warn(f'{YELLOW}Pose definition not found in pose config file! Ignoring request.{RESET}')
+            goal_handle.abort()
+            result = MoveHandToNamedPose.Result(final_state=self.hand_state_msg, success=False)
+
+        return result
 
     def execute_hand_pose(self, desired_joint_states_list):
         joint_positions_list = desired_joint_states_list
