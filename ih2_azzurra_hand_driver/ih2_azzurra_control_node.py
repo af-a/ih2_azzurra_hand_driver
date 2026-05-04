@@ -40,6 +40,7 @@ class Ih2AzzurraControlNode(Node):
         # Get node parameters:
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
         self.declare_parameter('pose_config_file_path', os.path.join(self.pkg_share_path, 'default_hand_poses.yaml'))
+        self.declare_parameter('named_pose', 'Type pose name here...')
 
         self.serial_port = self.get_parameter('serial_port').value
         self.pose_config_file_path = self.get_parameter('pose_config_file_path').value
@@ -95,9 +96,9 @@ class Ih2AzzurraControlNode(Node):
         modified_joint_param_names = list(set(modified_param_names).intersection(set(self.doa_names)))
         # self.get_logger().info(f'[DEBUG] modified_joint_param_names: {modified_joint_param_names}')
 
-        if 'action_command_string' in modified_param_names:
-            action_command_param = next(param for param in params if param.name == 'action_command_string')
-            self.execute_named_hand_pose(action_command_param.value)
+        if 'named_pose' in modified_param_names:
+            named_pose_param = next(param for param in params if param.name == 'named_pose')
+            self.execute_named_hand_pose(named_pose_param.value)
 
             return SetParametersResult(successful=True)
         elif modified_joint_param_names != []:
